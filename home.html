@@ -1,0 +1,91 @@
+{% extends 'base.html' %}
+{% block title %}MissingTrace AI — Home{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero-section">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-7 hero-content">
+                <h1 class="hero-title">
+                    Find Missing People<br>
+                    With <span class="highlight">AI-Powered</span><br>
+                    Facial Recognition
+                </h1>
+                <p class="hero-subtitle">
+                    An intelligent platform connecting families with law enforcement.
+                    Our AI analyzes CCTV footage in real-time to identify missing
+                    individuals using advanced facial recognition — no prior training needed.
+                </p>
+                <div class="d-flex gap-3 flex-wrap">
+                    <a href="{% url 'login' %}?role=public" class="btn-primary-custom">
+                        <i class="fas fa-user-plus me-2"></i> Report Missing Person
+                    </a>
+                    <a href="{% url 'login' %}?role=police" class="btn-secondary-custom">
+                        <i class="fas fa-shield-halved me-2"></i> Police Portal
+                    </a>
+                </div>
+                <div class="hero-stats">
+                    <div class="stat-item">
+                        <div class="stat-number">AI</div>
+                        <div class="stat-label">Face Recognition</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number">24/7</div>
+                        <div class="stat-label">Monitoring</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number">Real-time</div>
+                        <div class="stat-label">Video Analysis</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-5 d-none d-lg-block text-center">
+                <div style="font-size: 12rem; opacity: 0.15;">🔍</div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Features Section -->
+<section class="py-5">
+    <div class="container">
+        <div class="text-center mb-5">
+            <h2 style="font-weight: 800; font-size: 2rem;">How It Works</h2>
+            <p style="color: var(--text-secondary); max-width: 600px; margin: 0.5rem auto 0;">
+                Our system bridges the gap between missing person reports and law enforcement investigations.
+            </p>
+        </div>
+        <div class="row g-4">
+            <div class="col-md-6 col-lg-3">
+                <div class="feature-card">
+                    <div class="feature-icon blue"><i class="fas fa-file-alt"></i></div>
+                    <h4>Report a Case</h4>
+                    <p>Public users register and submit missing person cases with multiple photographs and detailed descriptions.</p>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-3">
+                <div class="feature-card">
+                    <div class="feature-icon purple"><i class="fas fa-database"></i></div>
+                    <h4>Centralized Database</h4>
+                    <p>All cases are stored in a centralized system accessible by registered police officers for investigation.</p>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-3">
+                <div class="feature-card">
+                    <div class="feature-icon cyan"><i class="fas fa-video"></i></div>
+                    <h4>Upload CCTV Footage</h4>
+                    <p>Police officers upload CCTV videos or surveillance footage. The AI processes each frame automatically.</p>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-3">
+                <div class="feature-card">
+                    <div class="feature-icon green"><i class="fas fa-brain"></i></div>
+                    <h4>AI Face Matching</h4>
+                    <p>Our AI compares detected faces with the database using untrained data matching — no prior model training needed.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

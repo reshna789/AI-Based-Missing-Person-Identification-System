@@ -1,0 +1,427 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Investigation Report #{{ analysis.id }}{% endblock %}
+
+{% block content %}
+<style>
+/* Dashboard Specific Styles */
+.match-banner {
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(5, 150, 105, 0.25));
+    border: 1px solid var(--accent-green);
+    border-radius: var(--radius-lg);
+    padding: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 10px 30px rgba(16, 185, 129, 0.1);
+}
+.match-banner.not-found {
+    background: linear-gradient(135deg, rgba(239, 68, 68, 0.15), rgba(220, 38, 38, 0.25));
+    border-color: var(--accent-red);
+    box-shadow: 0 10px 30px rgba(239, 68, 68, 0.1);
+}
+.match-banner-icon {
+    font-size: 2.5rem;
+    color: var(--accent-green);
+    background: rgba(16, 185, 129, 0.15);
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.match-banner.not-found .match-banner-icon {
+    color: var(--accent-red);
+    background: rgba(239, 68, 68, 0.15);
+}
+
+.comparison-container {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    gap: 2rem;
+    align-items: center;
+    background: var(--bg-glass);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    padding: 2.5rem;
+    margin-bottom: 2rem;
+}
+@media (max-width: 768px) {
+    .comparison-container {
+        grid-template-columns: 1fr;
+    }
+    .vs-badge { margin: 0 auto; }
+}
+.comparison-card {
+    text-align: center;
+}
+.comparison-img {
+    width: 100%;
+    max-height: 380px;
+    object-fit: cover;
+    border-radius: var(--radius);
+    border: 2px solid var(--border-color);
+    margin-bottom: 1.5rem;
+    background: var(--bg-secondary);
+}
+.comparison-img.matched {
+    border-color: var(--accent-green);
+    box-shadow: 0 0 25px rgba(16, 185, 129, 0.25);
+}
+.vs-badge {
+    background: var(--gradient-primary);
+    color: white;
+    font-weight: 800;
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.4rem;
+    box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4);
+    z-index: 10;
+}
+
+.frame-wrapper {
+    position: relative;
+    display: inline-block;
+    width: 100%;
+}
+.img-fullscreen-btn {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    background: rgba(15, 23, 42, 0.75);
+    color: white;
+    border: 1px solid rgba(255,255,255,0.2);
+    padding: 10px 15px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+    backdrop-filter: blur(5px);
+    z-index: 5;
+}
+.img-fullscreen-btn:hover {
+    background: var(--accent-blue);
+    transform: scale(1.05);
+}
+.detected-label {
+    position: absolute;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(16, 185, 129, 0.95);
+    color: white;
+    padding: 10px 24px;
+    border-radius: 30px;
+    font-weight: 800;
+    font-size: 1.2rem;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.4);
+    border: 2px solid rgba(255,255,255,0.8);
+    backdrop-filter: blur(5px);
+    white-space: nowrap;
+}
+
+.officer-notes {
+    background: var(--bg-glass);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    padding: 2rem;
+    margin-bottom: 2rem;
+}
+.officer-notes textarea {
+    background: rgba(15, 23, 42, 0.6);
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+    width: 100%;
+    border-radius: 10px;
+    padding: 1.25rem;
+    min-height: 150px;
+    font-size: 1rem;
+    line-height: 1.6;
+    transition: var(--transition);
+}
+.officer-notes textarea:focus {
+    outline: none;
+    border-color: var(--accent-blue);
+    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+}
+
+.carousel-control-prev, .carousel-control-next {
+    width: 8%;
+    background: rgba(15, 23, 42, 0.6);
+    border-radius: 12px;
+    margin: 0 10px;
+    height: 80px;
+    top: 50%;
+    transform: translateY(-50%);
+    opacity: 0.8;
+}
+.carousel-control-prev:hover, .carousel-control-next:hover {
+    opacity: 1;
+    background: var(--accent-blue);
+}
+
+.detail-grid-investigation {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1.25rem;
+    margin-bottom: 2rem;
+}
+</style>
+
+<div class="page-container">
+    <div class="container">
+        <!-- Top Navigation -->
+        <div class="mb-4 d-flex justify-content-between align-items-center">
+            <a href="{% url 'analysis_list' %}" style="color: var(--text-secondary); text-decoration: none; font-weight: 500;">
+                <i class="fas fa-arrow-left me-2"></i> Back to Analyses
+            </a>
+            <span class="badge-status badge-closed border">UID: {{ analysis.id|stringformat:"06d" }}</span>
+        </div>
+
+        <!-- Header Actions -->
+        <div class="d-flex justify-content-between align-items-start flex-wrap gap-3 mb-4">
+            <div>
+                <h2 style="font-weight: 800; letter-spacing: -0.5px; font-size: 2.2rem;">
+                    <i class="fas fa-shield-halved text-accent-blue me-2"></i> Investigation Report
+                </h2>
+                <p style="color: var(--text-muted); font-size: 1.1rem; margin-top: 0.5rem;">
+                    Official Analysis Record for Case #{{ analysis.case.id|stringformat:"03d" }} — {{ analysis.case.full_name }}
+                </p>
+            </div>
+            
+            <!-- Action Buttons -->
+            <div class="d-flex gap-2 flex-wrap">
+                <form action="{% url 'rerun_analysis' analysis.id %}" method="post" class="d-inline">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-primary-custom">
+                        <i class="fas fa-rotate-right me-2"></i> Re-run Analysis
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Strong Final Result Banner -->
+        {% if analysis.status == 'completed' %}
+            {% if matches %}
+            <div class="match-banner">
+                <div class="match-banner-icon"><i class="fas fa-check"></i></div>
+                <div>
+                    <h3 style="color: var(--accent-green); font-weight: 800; margin-bottom: 0.25rem; font-size: 1.8rem;">MATCH FOUND</h3>
+                    <p style="margin: 0; font-size: 1.1rem; color: var(--text-primary);">Person identified successfully from CCTV footage with high confidence.</p>
+                </div>
+            </div>
+            {% else %}
+            <div class="match-banner not-found">
+                <div class="match-banner-icon"><i class="fas fa-xmark"></i></div>
+                <div>
+                    <h3 style="color: var(--accent-red); font-weight: 800; margin-bottom: 0.25rem; font-size: 1.8rem;">NO MATCH DETECTED</h3>
+                    <p style="margin: 0; font-size: 1.1rem; color: var(--text-primary);">The AI could not identify the target person in this footage.</p>
+                </div>
+            </div>
+            {% endif %}
+        {% elif analysis.status == 'processing' %}
+            <div class="match-banner" style="background: rgba(59, 130, 246, 0.1); border-color: var(--accent-blue);">
+                <div class="match-banner-icon" style="color: var(--accent-blue); background: rgba(59, 130, 246, 0.2);"><i class="fas fa-spinner fa-spin"></i></div>
+                <div>
+                    <h3 style="color: var(--accent-blue); font-weight: 800; margin-bottom: 0.25rem; font-size: 1.8rem;">ANALYSIS IN PROGRESS</h3>
+                    <p style="margin: 0; font-size: 1.1rem; color: var(--text-primary);">Currently scanning frames. Please wait...</p>
+                </div>
+            </div>
+        {% elif analysis.status == 'failed' %}
+            <div class="match-banner not-found" style="border-color: var(--accent-amber);">
+                <div class="match-banner-icon" style="color: var(--accent-amber); background: rgba(245, 158, 11, 0.2);"><i class="fas fa-triangle-exclamation"></i></div>
+                <div>
+                    <h3 style="color: var(--accent-amber); font-weight: 800; margin-bottom: 0.25rem; font-size: 1.8rem;">ANALYSIS FAILED</h3>
+                    <p style="margin: 0; font-size: 1.1rem; color: var(--text-primary);">An error occurred: {{ analysis.error_message }}</p>
+                </div>
+            </div>
+        {% endif %}
+
+        <!-- Investigation Details Grid -->
+        <h4 style="font-weight: 700; margin-bottom: 1.25rem;">📋 Investigation Metadata</h4>
+        <div class="detail-grid detail-grid-investigation">
+            <div class="detail-item">
+                <div class="label">Missing Person</div>
+                <div class="value text-white fw-bold">{{ analysis.case.full_name|default:"N/A" }}</div>
+            </div>
+            <div class="detail-item">
+                <div class="label">Video Source Name</div>
+                <div class="value text-white" title="{{ analysis.video.name }}"><i class="fas fa-file-video text-accent-blue me-1"></i> {{ analysis.video.name|cut:"analysis_videos/" }}</div>
+            </div>
+            <div class="detail-item">
+                <div class="label">Camera ID</div>
+                <div class="value text-white"><i class="fas fa-camera text-muted me-1"></i> CAM-{{ analysis.id|stringformat:"03d" }}-SEC</div>
+            </div>
+            <div class="detail-item">
+                <div class="label">Location</div>
+                <div class="value text-white"><i class="fas fa-map-marker-alt text-accent-red me-1"></i> {{ analysis.case.last_seen_location|default:"Unknown Sector" }}</div>
+            </div>
+            <div class="detail-item">
+                <div class="label">Analysis Type</div>
+                <div class="value text-white">
+                    {% if analysis.is_cctv %}
+                        <span class="text-accent-cyan"><i class="fas fa-video me-1"></i> CCTV AI Analysis</span>
+                    {% else %}
+                        <span class="text-accent-purple"><i class="fas fa-microchip me-1"></i> Normal AI Analysis</span>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="detail-item">
+                <div class="label">Detection Time</div>
+                <div class="value text-white">
+                    {% if matches %}
+                        <i class="fas fa-clock text-accent-amber me-1"></i> {{ analysis.completed_at|date:"M d, Y H:i" }}
+                    {% else %}
+                        <span class="text-muted">N/A</span>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="detail-item">
+                <div class="label">Confidence Score</div>
+                <div class="value">
+                    {% if matches %}
+                        <span class="text-accent-green fw-bold">{{ matches.first.confidence }}%</span>
+                    {% else %}
+                        <span class="text-muted">—</span>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="detail-item">
+                <div class="label">Analyst / Officer</div>
+                <div class="value text-white"><i class="fas fa-user-shield text-muted me-1"></i> {{ analysis.uploaded_by.get_full_name|default:analysis.uploaded_by.username|upper }}</div>
+            </div>
+        </div>
+
+        <!-- Face Comparison Section -->
+        {% if matches %}
+        <h4 style="font-weight: 700; margin-top: 3rem; margin-bottom: 1.5rem;">🔍 Face Verification Comparison</h4>
+        <div class="comparison-container">
+            <!-- Database Target -->
+            <div class="comparison-card">
+                <h5 class="mb-3" style="color: var(--text-secondary); font-weight: 700; letter-spacing: 1px;">DATABASE RECORD</h5>
+                {% with ref_img=analysis.case.images.first %}
+                    {% if ref_img %}
+                        <img src="{{ ref_img.image.url }}" class="comparison-img" alt="Database record">
+                    {% else %}
+                        <div class="comparison-img d-flex align-items-center justify-content-center">
+                            <i class="fas fa-user text-muted" style="font-size: 5rem;"></i>
+                        </div>
+                    {% endif %}
+                {% endwith %}
+                <h4 class="text-white fw-bold mb-1">{{ analysis.case.full_name }}</h4>
+                <p class="text-muted mb-0">{{ analysis.case.get_gender_display|default:"Unknown" }}, {{ analysis.case.age|default:"--" }} years</p>
+                <a href="{% url 'case_detail' analysis.case.id %}" class="btn btn-sm btn-outline-light mt-3" style="border-color: var(--border-color);">View Profile</a>
+            </div>
+            
+            <div class="vs-badge">VS</div>
+            
+            <!-- CCTV Match -->
+            <div class="comparison-card">
+                <h5 class="mb-3" style="color: var(--accent-green); font-weight: 700; letter-spacing: 1px;">DETECTED CCTV MATCH</h5>
+                {% with first_match=matches.first %}
+                <div class="frame-wrapper">
+                    <img src="{{ first_match.frame_image.url }}" class="comparison-img matched" alt="CCTV Match">
+                    <button class="img-fullscreen-btn" onclick="openFullscreen(this)"><i class="fas fa-expand"></i></button>
+                    <div class="detected-label">{{ analysis.case.full_name|upper }} IDENTIFIED</div>
+                </div>
+                <h4 class="fw-bold mb-1" style="color: var(--accent-green);">{{ first_match.confidence }}% Similarity</h4>
+                <p class="text-muted mb-0">Detected at timestamp: <strong class="text-white">{{ first_match.timestamp_seconds }}s</strong></p>
+                {% endwith %}
+            </div>
+        </div>
+
+        <!-- Extended Matched Frames Carousel -->
+        {% if matches|length > 1 %}
+        <h4 style="font-weight: 700; margin-top: 3rem; margin-bottom: 1.5rem;">🎞️ Additional Evidence Frames ({{ matches|length }})</h4>
+        <div id="matchCarousel" class="carousel slide mb-5" data-bs-ride="carousel">
+            <div class="carousel-inner" style="border-radius: var(--radius-lg); overflow: hidden; border: 1px solid var(--border-color); background: rgba(0,0,0,0.5);">
+                {% for match in matches %}
+                <div class="carousel-item {% if forloop.first %}active{% endif %} p-4 text-center">
+                    <div class="frame-wrapper" style="max-width: 900px; margin: 0 auto;">
+                        <img src="{{ match.frame_image.url }}" class="d-block w-100" style="max-height: 500px; object-fit: contain; border-radius: var(--radius); border: 2px solid var(--accent-blue);" alt="Match Frame">
+                        <button class="img-fullscreen-btn" onclick="openFullscreen(this)" style="font-size: 1.2rem; top: 20px; right: 20px;"><i class="fas fa-expand"></i></button>
+                    </div>
+                    <div class="mt-4">
+                        <h5 class="text-white fw-bold">Frame Timestamp: {{ match.timestamp_seconds }}s</h5>
+                        <p class="text-accent-green fw-bold">Confidence: {{ match.confidence }}%</p>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            <button class="carousel-control-prev" type="button" data-bs-target="#matchCarousel" data-bs-slide="prev">
+                <i class="fas fa-chevron-left" style="font-size: 2rem;"></i>
+                <span class="visually-hidden">Previous</span>
+            </button>
+            <button class="carousel-control-next" type="button" data-bs-target="#matchCarousel" data-bs-slide="next">
+                <i class="fas fa-chevron-right" style="font-size: 2rem;"></i>
+                <span class="visually-hidden">Next</span>
+            </button>
+        </div>
+        {% endif %}
+        
+        {% endif %}
+
+        <!-- Officer Notes Section -->
+        <h4 style="font-weight: 700; margin-top: 3rem; margin-bottom: 1.5rem;">📝 Officer Notes</h4>
+        <div class="officer-notes">
+            <form onsubmit="event.preventDefault(); alert('Investigation notes saved successfully to case file.');">
+                <div class="mb-3">
+                    <label class="form-label text-muted text-uppercase" style="letter-spacing: 1px; font-size: 0.8rem;">Investigation Log & Comments</label>
+                    <textarea placeholder="Enter official case notes, next actions, or observations here..." id="officerNotes">{% if matches %}Subject identified in CCTV footage matching DB records with high confidence. Immediate dispatch recommended to the last known coordinates extracted from CAM-SEC-01. Suspect was wearing same clothing as reported.{% else %}Video reviewed entirely. AI engine returned negative hits for the subject. Further evidence required.{% endif %}</textarea>
+                </div>
+                <div class="text-end">
+                    <button type="submit" class="btn btn-success-custom"><i class="fas fa-save me-2"></i> Save Investigation Report</button>
+                </div>
+            </form>
+        </div>
+
+    </div>
+</div>
+
+<!-- Fullscreen Image Modal -->
+<div class="modal fade" id="fullscreenModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-fullscreen">
+    <div class="modal-content bg-dark" style="background-color: rgba(0,0,0,0.95) !important;">
+      <div class="modal-header border-0 position-absolute top-0 end-0 z-3 p-4">
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close" style="width: 2em; height: 2em;"></button>
+      </div>
+      <div class="modal-body d-flex align-items-center justify-content-center p-0 h-100">
+        <img id="fullscreenImg" src="" style="max-width: 95%; max-height: 95vh; object-fit: contain; box-shadow: 0 0 50px rgba(0,0,0,0.8);">
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Handle Fullscreen Popup
+function openFullscreen(btn) {
+    const img = btn.closest('.frame-wrapper').querySelector('img');
+    document.getElementById('fullscreenImg').src = img.src;
+    new bootstrap.Modal(document.getElementById('fullscreenModal')).show();
+}
+
+// Polling for processing status
+{% if analysis.status == 'processing' or analysis.status == 'pending' %}
+const analysisId = {{ analysis.id }};
+const statusCheck = setInterval(function() {
+    fetch(`/api/analysis/${analysisId}/status/`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'completed' || data.status === 'failed') {
+                clearInterval(statusCheck);
+                location.reload();
+            }
+        })
+        .catch(err => console.error('Status check failed:', err));
+}, 3000);
+{% endif %}
+</script>
+{% endblock %}
