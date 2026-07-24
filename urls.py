@@ -1,10 +1,21 @@
-from django.urls import path
-from . import views
+from django.contrib import admin
+from django.urls import path, include
+from django.conf import settings
+from django.conf.urls.static import static
 
 urlpatterns = [
-    path('police/upload-video/', views.upload_video, name='upload_video'),
-    path('police/analysis/<int:analysis_id>/', views.analysis_detail, name='analysis_detail'),
-    path('police/analysis/<int:analysis_id>/rerun/', views.rerun_analysis, name='rerun_analysis'),
-    path('police/analyses/', views.analysis_list, name='analysis_list'),
-    path('api/analysis/<int:analysis_id>/status/', views.analysis_status_api, name='analysis_status_api'),
+    path('admin/', admin.site.urls),
+    path('', include('users.urls')),
+    path('', include('cases.urls')),
+    path('', include('ai_engine.urls')),
+]
+
+# Force serving static and media files locally even when DEBUG=False 
+# (Useful for performance testing without breaking CSS/Images)
+from django.urls import re_path
+from django.views.static import serve
+
+urlpatterns += [
+    re_path(r'^media/(?P<path>.*)$', serve, {'document_root': settings.MEDIA_ROOT}),
+    re_path(r'^static/(?P<path>.*)$', serve, {'document_root': settings.STATICFILES_DIRS[0]}),
 ]
